@@ -23,8 +23,19 @@ function token() {
   }
 }
 
+function buildUrl(base, path) {
+  let cleanBase = (base || '/api/v1').trim().replace(/\/+$/, '')
+  if (cleanBase.startsWith('http://') || cleanBase.startsWith('https://')) {
+    if (!cleanBase.endsWith('/api/v1') && !cleanBase.endsWith('/api')) {
+      cleanBase += '/api/v1'
+    }
+  }
+  const cleanPath = path.startsWith('/') ? path : '/' + path
+  return new URL(cleanBase + cleanPath, window.location.origin)
+}
+
 async function request(path, { method = 'GET', params, json, form } = {}) {
-  const url = new URL(BASE + path, window.location.origin)
+  const url = buildUrl(BASE, path)
   Object.entries(params ?? {}).forEach(([k, v]) => v != null && v !== '' && url.searchParams.set(k, v))
   const headers = {}
   const t = token()

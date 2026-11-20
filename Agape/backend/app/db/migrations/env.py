@@ -22,6 +22,8 @@ def get_url() -> str:
     url = os.getenv("DATABASE_URL")
     if not url:
         url = config.get_main_option("sqlalchemy.url", "sqlite:///shareplate.db")
+    if url.startswith("postgres://"):
+        url = "postgresql://" + url[len("postgres://"):]
     return url
 
 

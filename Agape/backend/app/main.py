@@ -40,6 +40,14 @@ async def lifespan(app: FastAPI):
     auth_config.assert_safe_config()
     if os.getenv("AUTO_CREATE_TABLES", "1") != "0":
         init_db()  # create missing tables (no migrations yet); AUTO_CREATE_TABLES=0 skips it
+        if os.getenv("AUTO_SEED_ADMIN", "1") != "0":
+            try:
+                from app.db.seed import seed
+                from app.db.session import SessionLocal
+                with SessionLocal() as db:
+                    seed(db)
+            except Exception:
+                pass
     scheduler = start_scheduler()  # listing expiry job (Role B); needs the tables above
     yield
     if scheduler:
@@ -51,9 +59,24 @@ def create_app() -> FastAPI:
     register_error_handlers(app)  # Role B (app.errors)
     register_reservation_errors(app)  # Role D (reservations ApiError)
 
-    origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",") if o.strip()]
-    app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=True,
-                       allow_methods=["*"], allow_headers=["*"])
+    cors_env = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000")
+    if cors_env.strip() == "*":
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origin_regex=".*",
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+    else:
+        origins = [o.strip() for o in cors_env.split(",") if o.strip()]
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=origins,
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
 
     api = APIRouter(prefix=API_PREFIX)
     for r in ROUTERS:

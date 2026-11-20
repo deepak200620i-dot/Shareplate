@@ -71,8 +71,20 @@ class DocumentNotFoundError(UploadError):
 
 
 def get_private_upload_dir() -> Path:
-    """Read PRIVATE_UPLOAD_DIR at call time to support runtime test overrides."""
-    return Path(os.environ.get("PRIVATE_UPLOAD_DIR", "/data/private"))
+    """Read PRIVATE_UPLOAD_DIR at call time to support runtime test overrides and graceful fallback."""
+    configured = os.environ.get("PRIVATE_UPLOAD_DIR")
+    if configured:
+        p = Path(configured)
+        p.mkdir(parents=True, exist_ok=True)
+        return p
+    try:
+        default_dir = Path("/data/private")
+        default_dir.mkdir(parents=True, exist_ok=True)
+        return default_dir
+    except (PermissionError, OSError):
+        local_dir = Path(os.getcwd()) / "storage" / "private"
+        local_dir.mkdir(parents=True, exist_ok=True)
+        return local_dir
 
 
 def get_max_upload_bytes() -> int:

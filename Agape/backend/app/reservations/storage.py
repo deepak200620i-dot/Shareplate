@@ -24,7 +24,16 @@ _SIGNATURES = {
 
 
 def _upload_dir() -> Path:
-    path = Path(os.environ.get("PRIVATE_UPLOAD_DIR", "/data/private")) / "proofs"
+    configured = os.environ.get("PRIVATE_UPLOAD_DIR")
+    if configured:
+        path = Path(configured) / "proofs"
+    else:
+        try:
+            path = Path("/data/private/proofs")
+            path.mkdir(parents=True, exist_ok=True)
+            return path
+        except (PermissionError, OSError):
+            path = Path(os.getcwd()) / "storage" / "private" / "proofs"
     path.mkdir(parents=True, exist_ok=True)
     return path
 
