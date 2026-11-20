@@ -44,8 +44,6 @@ services:
   - type: web
     name: shareplate-frontend
     runtime: static
-    region: oregon
-    plan: free
     rootDir: Agape/frontend
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
