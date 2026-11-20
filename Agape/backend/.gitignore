@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.DS_Store
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+local_dev.db
+*.db
+
+# Demo documents written by app.db.seed
+.private_uploads/
